@@ -3,6 +3,7 @@
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Seeder;
 
+include 'LikeTableSeeder.php';
 include 'PostTableSeeder.php';
 include 'UserTableSeeder.php';
 include 'CommentTableSeeder.php';
@@ -21,7 +22,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(UserTableSeeder::class);
         $this->call(PostTableSeeder::class);
-//        $this->call(CommentTableSeeder::class);
+        $this->call(LikeTableSeeder::class);
 
 //        Model::reguard();
     }

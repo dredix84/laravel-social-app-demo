@@ -20,7 +20,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::group(['middleware' => 'auth:api'], function () {
     Route::apiResources([
         'post' => 'API\PostController',
-        'comment' => 'API\CommentController'
+        'comment' => 'API\CommentController',
+        'like' => 'API\LikeController'
     ]);
 });
 

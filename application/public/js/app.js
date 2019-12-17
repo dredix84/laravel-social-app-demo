@@ -2084,11 +2084,19 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   name: "posts",
   data: function data() {
     return {
       posts: [],
+      likes: {},
       newPost: new Form({
         id: null,
         title: '',
@@ -2102,7 +2110,10 @@ __webpack_require__.r(__webpack_exports__);
         key: ''
       }),
       workingPost: null,
-      userId: USER_ID
+      userId: USER_ID,
+      processing: {
+        like: null
+      }
     };
   },
   methods: {
@@ -2121,14 +2132,40 @@ __webpack_require__.r(__webpack_exports__);
       axios.get('/api/post').then(function (_ref) {
         var data = _ref.data;
         that.posts = data;
+        that.getLikes();
       })["catch"](function (err) {
         return console.error(err);
       });
     },
+    getLikes: function getLikes() {
+      var that = this;
+      axios.get('/api/like?comment_ids=' + this.currentCommentIds.join(',')).then(function (_ref2) {
+        var data = _ref2.data;
+        that.likes = data;
+      })["catch"](function (err) {
+        return console.error(err);
+      });
+    },
+    toggleLike: function toggleLike(comment) {
+      var that = this;
+      this.processing.like = comment.id;
+      axios({
+        method: 'post',
+        url: '/api/like',
+        data: comment
+      }).then(function (_ref3) {
+        var data = _ref3.data;
+        that.likes[comment.id] = data;
+      })["catch"](function (err) {
+        return console.error(err);
+      })["finally"](function () {
+        that.processing.like = null;
+      });
+    },
     savePost: function savePost() {
       var that = this;
-      this.newPost.post('/api/post').then(function (_ref2) {
-        var data = _ref2.data;
+      this.newPost.post('/api/post').then(function (_ref4) {
+        var data = _ref4.data;
         console.log(data);
         that.newPost.reset();
         that.getPosts();
@@ -2140,10 +2177,12 @@ __webpack_require__.r(__webpack_exports__);
     saveComment: function saveComment() {
       var that = this;
       this.newComment.post_id = this.workingPost.id;
-      this.newComment.post('/api/comment').then(function (_ref3) {
-        var data = _ref3.data;
+      this.newComment.post('/api/comment').then(function (_ref5) {
+        var data = _ref5.data;
         console.log(data);
         that.workingPost.comments.unshift(data);
+        var EmptyArray = [];
+        that.likes[data.id] = EmptyArray;
         that.newComment.reset();
         that.hideSaveCommentModal();
       })["catch"](function (err) {
@@ -2163,8 +2202,8 @@ __webpack_require__.r(__webpack_exports__);
         confirmButtonText: 'Yes, delete it!'
       }).then(function (result) {
         if (result.value) {
-          that.newComment["delete"]('/api/comment/' + comment.id).then(function (_ref4) {
-            var data = _ref4.data;
+          that.newComment["delete"]('/api/comment/' + comment.id).then(function (_ref6) {
+            var data = _ref6.data;
             console.log(data);
             var index = post.comments.indexOf(comment);
 
@@ -2176,6 +2215,20 @@ __webpack_require__.r(__webpack_exports__);
           });
         }
       });
+    },
+    getLikeCount: function getLikeCount(comment) {
+      if (comment.id in this.likes) {
+        return this.likes[comment.id].length;
+      }
+
+      return 0;
+    },
+    didILike: function didILike(comment) {
+      if (comment.id in this.likes) {
+        return this.likes[comment.id].includes(this.userId) ? 'success' : 'primary';
+      }
+
+      return 'primary';
     },
     nl2br: function nl2br(str, is_xhtml) {
       if (typeof str === 'undefined' || str === null) {
@@ -2192,7 +2245,19 @@ __webpack_require__.r(__webpack_exports__);
   created: function created() {
     this.getPosts();
   },
-  filters: {}
+  computed: {
+    currentCommentIds: function currentCommentIds() {
+      var ids = [];
+
+      for (var p = 0; p < this.posts.length; p++) {
+        for (var c = 0; c < this.posts[p].comments.length; c++) {
+          ids.push(this.posts[p].comments[c].id);
+        }
+      }
+
+      return ids;
+    }
+  }
 });
 
 /***/ }),
@@ -71118,18 +71183,39 @@ var render = function() {
                                               modifiers: { hover: true }
                                             }
                                           ],
+                                          key:
+                                            comment.id +
+                                            _vm.getLikeCount(comment),
+                                          staticClass: "like",
                                           attrs: {
-                                            variant: "primary",
+                                            variant: _vm.didILike(comment),
                                             title: "Likes"
+                                          },
+                                          on: {
+                                            click: function($event) {
+                                              $event.preventDefault()
+                                              return _vm.toggleLike(comment)
+                                            }
                                           }
                                         },
                                         [
-                                          _c("i", {
-                                            staticClass: "fas fa-thumbs-up"
-                                          }),
-                                          _vm._v(
-                                            " 0\n                                    "
-                                          )
+                                          _vm.processing.like == comment.id
+                                            ? _c("i", {
+                                                staticClass:
+                                                  "fas fa-hourglass-half"
+                                              })
+                                            : _c("span", [
+                                                _c("i", {
+                                                  staticClass:
+                                                    "fas fa-thumbs-up"
+                                                }),
+                                                _vm._v(
+                                                  " " +
+                                                    _vm._s(
+                                                      _vm.getLikeCount(comment)
+                                                    )
+                                                )
+                                              ])
                                         ]
                                       ),
                                       _vm._v(" "),

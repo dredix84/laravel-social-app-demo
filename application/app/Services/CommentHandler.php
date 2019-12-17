@@ -40,6 +40,12 @@ class CommentHandler
         }
     }
 
+    /**
+     * Used to add a comment to the cached comments
+     * @param $comment
+     *
+     * @return bool
+     */
     public function add(&$comment)
     {
         $allPost = PostRetriever::latest();
@@ -57,6 +63,10 @@ class CommentHandler
         return false;
     }
 
+    /**
+     * Used to remove a comment from the cache
+     * @return mixed|null
+     */
     public function getToDelete()
     {
         $data = Redis::get('Comment:toDelete');
@@ -64,11 +74,23 @@ class CommentHandler
         return $data ? json_decode($data) : null;
     }
 
+    /**
+     * Used to mark data for deletion
+     * @param $data
+     */
     public function setToDelete($data)
     {
         Redis::set('Comment:toDelete', json_encode($data));
     }
 
+    /**
+     * Used to get a comment from cache by the ID and post ID
+     *
+     * @param $commentKeyId
+     * @param $postId
+     *
+     * @return array|null
+     */
     public function getCommentByKeyAndPost($commentKeyId, $postId)
     {
         $allPost = PostRetriever::latest();

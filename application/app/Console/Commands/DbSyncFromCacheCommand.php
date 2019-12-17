@@ -3,8 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Comment;
+use App\Like;
 use App\Post;
 use App\Services\CommentHandler;
+use App\Services\LikeHandler;
 use App\Services\PostRetriever;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -54,6 +56,7 @@ class DbSyncFromCacheCommand extends Command
         putenv("CACHE2DB=true");
         $this->syncCacheToDb();
         $this->deleteComments();
+        $this->syncLikesToDb();
     }
 
     /**
@@ -151,6 +154,36 @@ class DbSyncFromCacheCommand extends Command
                     'message' => $e->getMessage(),
                 ]
             );
+        }
+    }
+
+
+    protected function syncLikesToDb()
+    {
+        $this->info('Task: Inserting likes');
+        //Doing Inserts
+        $likeHandler = new LikeHandler();
+        $toInsert    = (array)$likeHandler->getCacheLikes('toInsert');
+        if ($toInsert) {
+            $this->info(sprintf('Task: %d likes to insert', count($toInsert)));
+
+            foreach ($toInsert as $like) {
+                try {
+                    Like::create((array)$like);
+                } catch (\Exception $e) {
+                    Log::error($e->getMessage(), (array)$like);
+                }
+            }
+        }
+        $likeHandler->saveLikeToCache('toInsert', []);
+
+
+        $this->info('Task: Deleting likes');
+        $toDelete = $likeHandler->getCacheLikes('toDelete');
+        if ($toDelete && count($toDelete)) {
+            $this->info(sprintf('Task: %d likes to delete', count($toDelete)));
+            Like::destroy($toDelete);
+            $likeHandler->saveLikeToCache('toDelete', []);
         }
     }
 

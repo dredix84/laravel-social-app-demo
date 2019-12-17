@@ -45,8 +45,15 @@
                                     class="d-flex justify-content-between align-items-center"
                                 >
                                     <p>
-                                        <b-badge variant="primary" v-b-tooltip.hover title="Likes">
-                                            <i class="fas fa-thumbs-up"></i> 0
+                                        <b-badge
+                                            class="like"
+                                            :variant="didILike(comment)"
+                                            v-b-tooltip.hover title="Likes"
+                                            :key="comment.id + getLikeCount(comment)"
+                                            @click.prevent="toggleLike(comment)"
+                                        >
+                                            <i class="fas fa-hourglass-half" v-if="processing.like == comment.id"></i>
+                                            <span v-else><i class="fas fa-thumbs-up"></i> {{ getLikeCount(comment) }}</span>
                                         </b-badge>
 
                                         <span
@@ -200,6 +207,7 @@
         data() {
             return {
                 posts: [],
+                likes: {},
                 newPost: new Form({
                     id: null,
                     title: '',
@@ -213,7 +221,10 @@
                     key: ''
                 }),
                 workingPost: null,
-                userId: USER_ID
+                userId: USER_ID,
+                processing: {
+                    like: null
+                }
             }
         },
         methods: {
@@ -232,8 +243,34 @@
                 axios.get('/api/post')
                     .then(function ({data}) {
                         that.posts = data;
+                        that.getLikes();
                     })
                     .catch(err => console.error(err));
+            },
+            getLikes: function () {
+                var that = this;
+                axios.get('/api/like?comment_ids=' + this.currentCommentIds.join(','))
+                    .then(function ({data}) {
+                        that.likes = data;
+                    })
+                    .catch(err => console.error(err));
+            },
+            toggleLike: function (comment) {
+                var that = this;
+                this.processing.like = comment.id;
+                axios({
+                    method: 'post',
+                    url: '/api/like',
+                    data: comment
+                })
+                    .then(function ({data}) {
+                        that.likes[comment.id] = data;
+                    })
+                    .catch(err => console.error(err))
+                    .finally(()=> {
+                        that.processing.like = null;
+                    })
+                ;
             },
             savePost: function () {
                 var that = this;
@@ -253,6 +290,8 @@
                     .then(({data}) => {
                         console.log(data);
                         that.workingPost.comments.unshift(data);
+                        let EmptyArray = [];
+                        that.likes[data.id] = EmptyArray;
                         that.newComment.reset();
                         that.hideSaveCommentModal();
                     })
@@ -285,6 +324,18 @@
                     }
                 });
             },
+            getLikeCount: function (comment) {
+                if (comment.id in this.likes) {
+                    return this.likes[comment.id].length;
+                }
+                return 0;
+            },
+            didILike: function (comment) {
+                if (comment.id in this.likes) {
+                    return this.likes[comment.id].includes(this.userId) ? 'success' : 'primary';
+                }
+                return 'primary';
+            },
             nl2br: function (str, is_xhtml) {
                 if (typeof str === 'undefined' || str === null) {
                     return '';
@@ -299,7 +350,17 @@
         created() {
             this.getPosts();
         },
-        filters: {}
+        computed: {
+            currentCommentIds: function () {
+                let ids = [];
+                for (let p = 0; p < this.posts.length; p++) {
+                    for (let c = 0; c < this.posts[p].comments.length; c++) {
+                        ids.push(this.posts[p].comments[c].id);
+                    }
+                }
+                return ids;
+            }
+        }
     }
 </script>
 

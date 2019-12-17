@@ -28,7 +28,11 @@ class PostRetriever
         return $posts;
     }
 
-
+    /**
+     * Used to save/set data to cache
+     * @param $posts
+     * @param  bool  $restoreExpiry
+     */
     public static function set($posts, $restoreExpiry = false){
         Redis::set('Post:latest', json_encode($posts), 'EX', 60 * 10);
     }
