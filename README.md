@@ -37,13 +37,18 @@ It also features a responsive layout thanks to Bootstrap.
 
 The database sync command is used to sync the cache data to the database. It can be ran manually with the command `php artisan db:save-cache` however, this can be automated by adding `* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1` to your `cron`.
 
-## To Do
+## To Do / Improvements
 
-- Add ability to user to like comments
+- Add unit automated testing
+- Create a class which would be used to handle all cache/database interactions to queuing data for inserts/updates and deletes
+- Rewrite some of the frontend as individual components
+- Use Vuex to manage areas of the application lime the menu and global search
 
 ## Creator
 
 Name: Andre Dixon
+
+Email: dredix84@gmail.com
 
 ## Preview
 
