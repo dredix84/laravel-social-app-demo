@@ -34,6 +34,6 @@ class PostRetriever
      * @param  bool  $restoreExpiry
      */
     public static function set($posts, $restoreExpiry = false){
-        Redis::set('Post:latest', json_encode($posts), 'EX', 60 * 10);
+        Redis::set('Post:latest', json_encode($posts), 'EX', config('app.redisDataLife', 600));
     }
 }

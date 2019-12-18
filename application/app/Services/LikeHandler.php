@@ -69,7 +69,7 @@ class LikeHandler
      */
     public function saveLikeToCache($key, $data)
     {
-        Redis::set($this->getCacheName($key), json_encode($data), 'EX', 60 * 10);
+        Redis::set($this->getCacheName($key), json_encode($data), 'EX', config('app.redisDataLife', 600));
     }
 
     /**

@@ -228,4 +228,5 @@ return [
 
     ],
 
+    'redisDataLife' => (60 * 10),     // 10 Minutes
 ];

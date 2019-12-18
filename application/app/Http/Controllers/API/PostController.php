@@ -19,7 +19,6 @@ class PostController extends Controller
      */
     public function index()
     {
-//        return Post::latest()->with('comments')->get();
         return PostRetriever::latest();
     }
 
